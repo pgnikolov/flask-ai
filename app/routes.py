@@ -3,21 +3,31 @@ from groq import Groq
 
 main = Blueprint('main', __name__)
 
+
 def get_ai_response(user_input):
-    client = Groq(api_key=current_app.config['GROQ_API_KEY'])
+    api_key = current_app.config.get('GROQ_API_KEY')
+    if not api_key:
+        return "Error: API key is missing."
+
+    client = Groq(api_key=api_key)
     try:
         chat_completion = client.chat.completions.create(
             messages=[
                 {
                     "role": "user",
-                 "content": user_input
+                    "content": user_input
                 }
             ],
             model="llama3-8b-8192",
         )
-        return chat_completion.choices[0].message.content
+
+        if chat_completion.choices:
+            return chat_completion.choices[0].message.content
+        else:
+            return "Error: No choices returned from the API."
     except Exception as e:
         return f"Error: {e}"
+
 
 @main.route('/', methods=['GET', 'POST'])
 def index():
